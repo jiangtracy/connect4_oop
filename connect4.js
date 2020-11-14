@@ -9,13 +9,16 @@
 
 /* Create a class "Game" which takes in the width, height, and starting player 
 creates a game of Connect 4*/
-
+`
 class Game {
-	//width, height, currentPlayer
-	constructor(height, width, currPlayer) {
+  //width, height, currentPlayer`
+  // alternative solution: bring in global variables as default
+	constructor(height, width, player1, player2) {
 		this.height = height;
 		this.width = width;
-		this.currPlayer = currPlayer;
+    this.currPlayer = player1;
+    this.player1 = player1;
+    this.player2 = player2;
 		this.board = this.makeBoard();
 		this.handleClick = this.handleClick.bind(this);
 		this.makeHtmlBoard();
@@ -81,7 +84,13 @@ class Game {
 	placeInTable(y, x) {
 		const piece = document.createElement('div');
 		piece.classList.add('piece');
-		piece.classList.add(`p${this.currPlayer}`);
+    piece.classList.add(`p${this.currPlayer.playerNum}`);
+    if (this.currPlayer.playerNum === this.player1.playerNum) {
+      piece.style.backgroundColor = this.player1.color;
+    }
+    else {
+      piece.style.backgroundColor = this.player2.color;
+    }
 		piece.style.top = -50 * (y + 2);
 
 		const spot = document.getElementById(`${y}-${x}`);
@@ -108,12 +117,12 @@ class Game {
 		}
 		// debugger;
 		// place piece in board and add to HTML table
-		this.board[y][x] = this.currPlayer;
+		this.board[y][x] = this.currPlayer.playerNum;
 		this.placeInTable(y, x);
 
 		// check for win
 		if (this.checkForWin()) {
-			return this.endGame(`Player ${this.currPlayer} won!`);
+			return this.endGame(`Player ${this.currPlayer.playerNum} won!`);
 		}
 
 		// check for tie
@@ -122,12 +131,13 @@ class Game {
 		}
 
 		// switch players
-		this.currPlayer = this.currPlayer === 1 ? 2 : 1;
+		this.currPlayer = this.currPlayer === this.player1 ? this.player2 : this.player1;
 	}
 
 	/** checkForWin: check board cell-by-cell for "does a win start here?" */
 
 	checkForWin() {
+    // Alternative solution: arrow function rather than binding, or call _win with this
 		function _win(cells) {
 			//arrow function works too
 			// Check four cells to see if they're all color of current player
@@ -137,7 +147,7 @@ class Game {
 
 			return cells.every(
 				([ y, x ]) =>
-					y >= 0 && y < this.height && x >= 0 && x < this.width && this.board[y][x] === this.currPlayer
+					y >= 0 && y < this.height && x >= 0 && x < this.width && this.board[y][x] === this.currPlayer.playerNum
 			);
 		}
 
@@ -161,18 +171,31 @@ class Game {
 	}
 }
 
-/* makeStartButton: make a button on top of the game board*/
-function makeStartButton() {
-	let gameContainer = document.querySelector('#game');
-	let btn = document.createElement('button');
-	btn.innerText = 'Start Game!';
-	gameContainer.append(btn);
+/* create a Player class that takes in a string color and player number*/
+class Player {
+  constructor(color, playerNum) {
+    this.color = color;
+    this.playerNum = playerNum;
+  }
+
 }
 
-makeStartButton();
 
-/* adding restart to the button */
-document.querySelector('button').addEventListener('click', function() {
-	document.querySelector('#board').innerHTML = '';
-	let myGame = new Game(6, 7, 1);
-});
+/* create a new game. Add event listener on the form which creates two instances of players and creates an instance of game when submitted*/
+
+//Refactor to name function rather than having an anonymous function
+function createGameFromForm() {
+  document.querySelector('form').addEventListener('submit', function(event) {
+    event.preventDefault();
+    document.querySelector('#board').innerHTML = ''; //use innerText. innerHTML is a security risk (similar to eval)
+    
+    let color1 = document.querySelector('#player1Color').value;
+    let color2 = document.querySelector('#player2Color').value;
+  
+    let player1 = new Player(color1, 1);
+    let player2 = new Player(color2, 2);
+    new Game(6, 7, player1, player2);
+  });
+}
+
+createGameFromForm();
